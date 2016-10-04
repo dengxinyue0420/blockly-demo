@@ -1,14 +1,14 @@
 extends layout
 
 block scripts
+  script(src='blockly_compressed.js')
+  script(src='blocks_compressed.js')
   script(src='/javascripts/client.js')
-
+  script(src='en.js')
+  
 block content
   h1= title
   p Welcome to #{title}
-  p User #{uid}
-
-  div#message
-  form#sendMessage
-    input#msg(type='text')
-    button Submit
+  p#user User #{uid}
+  
+  div#blocklyWorkspace(style='height: 480px; width: 700px')
