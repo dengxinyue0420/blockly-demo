@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+  p User #{uid}
+
+  p#message
+  form#sendMessage
+    input(type='text' name='newMessage')
+    input(type='submit' value=Submit)
