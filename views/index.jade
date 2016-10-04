@@ -8,7 +8,7 @@ block content
   p Welcome to #{title}
   p User #{uid}
 
-  p#message
+  div#message
   form#sendMessage
-    input(type='text' name='newMessage')
-    input(type='submit' value=Submit)
+    input#msg(type='text')
+    button Submit

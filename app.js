@@ -8,7 +8,6 @@ var expressSession = require('express-session');
 var connectRedis = require('connect-redis');
 
 var routes = require('./routes/index');
-var users = require('./routes/users');
 
 var app = express();
 

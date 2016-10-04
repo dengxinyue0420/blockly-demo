@@ -2,12 +2,17 @@ var redis = require('redis')
 var sub = redis.createClient();
 var pub = redis.createClient();
 
-sub.subscribe('chat');
-
+sub.subscribe('newMessage');
 
 var events = function(io){
     io.on('connection', function(socket){
-	console.log('user connect');
+	       socket.on('chat', function(msg){
+               pub.publish('newMessage', msg);
+           });
+
+           sub.on('message', function(channel, msg){
+               socket.emit(channel, msg);
+           });
     });
 }
 
