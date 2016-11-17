@@ -2,7 +2,7 @@ var redis = require('redis')
 var sub = redis.createClient();
 var pub = redis.createClient();
 
-//sub.subscribe('newBlock');
+sub.subscribe('newBlock');
 
 var channel = "";
 var events = function(io){
@@ -18,6 +18,12 @@ var events = function(io){
            console.log("receive new block event for publishing");
            console.log(msg);
            pub.publish(channel, msg);
+       });
+
+       socket.on('testblock', function(msg){
+           console.log("receive new block event for publishing");
+           console.log(msg);
+           pub.publish("newBlock", msg);
        });
 
        sub.on('message', function(ch, msg){
