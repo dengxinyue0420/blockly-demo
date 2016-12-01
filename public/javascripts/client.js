@@ -40,6 +40,6 @@ $(document).ready(function(){
         }
         var eventJson = JSON.stringify(msg);
         console.log(eventJson);
-        socket.emit('block', eventJson);
+        socket.emit('testblock', eventJson);
     }
 });
