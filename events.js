@@ -5,6 +5,7 @@ var pub = redis.createClient();
 sub.subscribe('newBlock');
 var subscribedChannel = new Set();
 var projectJoinedUser = new Map();
+var screenChannel = "";
 var events = function(io){
     io.on('connection', function(socket){
         console.log("connection is on");
@@ -16,6 +17,19 @@ var events = function(io){
                 sub.subscribe(msg);
             }
         });
+
+        // Subscribe to a screen channel, each socket should only have one screen channel on friendly
+        socket.on("screenChannel", function(msg){
+            if(screenChannel===msg){
+                return;
+            }
+            if(screenChannel!==""){
+                sub.unsubscribe(screenChannel);
+            }
+            screenChannel = msg;
+            sub.subscribe(screenChannel);
+        });
+
         // Publish changes to user channel when a project is shared
         socket.on('shareProject', function(msg){
             console.log("receive new project published to "+msg["channel"]);
@@ -68,7 +82,12 @@ var events = function(io){
             console.log(msg);
             pub.publish("newBlock", msg);
         });
-
+        // Designer events
+        socket.on('component', function(msg){
+            console.log("receive new component event for publishing");
+            console.log(msg);
+            pub.publish(msg["channel"], JSON.stringify(msg));
+        })
         sub.on('message', function(ch, msg){
             console.log("ready to emit "+ch+" "+msg);
             socket.emit(ch, msg);
