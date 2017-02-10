@@ -1,23 +1,33 @@
 var redis = require('redis')
-var sub = redis.createClient();
 var pub = redis.createClient();
-
-sub.subscribe('newBlock');
-var subscribedChannel = new Set();
 var projectJoinedUser = new Map();
-var screenChannel = "";
+
 var events = function(io){
     io.on('connection', function(socket){
+        var sub = redis.createClient();
+        var subscribedChannel = new Set();
+        var userEmail = "";
+        var projectID = "";
+        var screenChannel = "";
         console.log("connection is on");
-        // Subscribe to channel
-        socket.on('channel', function(msg){
+        // Subscribe to user channel
+        socket.on('userChannel', function(msg){
             if(!subscribedChannel.has(msg)){
                 console.log("subscribe to user channel "+msg);
                 subscribedChannel.add(msg);
+                userEmail = msg;
                 sub.subscribe(msg);
             }
         });
-
+        // Subscribe to project channel
+        socket.on('projectChannel', function(msg){
+            if(!subscribedChannel.has(msg)){
+                console.log("subscribe to project channel "+msg);
+                subscribedChannel.add(msg);
+                projectID = msg;
+                sub.subscribe(msg);
+            }
+        });
         // Subscribe to a screen channel, each socket should only have one screen channel on friendly
         socket.on("screenChannel", function(msg){
             if(screenChannel===msg){
@@ -38,7 +48,6 @@ var events = function(io){
         });
         // Publish changes to project channel when a user opens a project
         socket.on('userJoin', function(msg){
-            console.log("One user join");
             console.log(msg);
             var joinedUsers;
             if(projectJoinedUser.has(msg["project"])){
@@ -48,17 +57,18 @@ var events = function(io){
                 projectJoinedUser.set(msg["project"], joinedUsers);
             }
             joinedUsers.add(msg["user"]);
+            console.log(joinedUsers);
             joinedUsers.forEach(function(e){
                 var pubMsg = {
                     "type" : "join",
                     "user" : e
                 };
+                console.log(userEmail +" send publish msg about "+e);
                 pub.publish(msg["project"], JSON.stringify(pubMsg));
             });
         });
         // Publish changes to project channel when a user closes a project
         socket.on('userLeave', function(msg){
-            console.log("One user leave");
             console.log(msg);
             var pubMsg = {
                 "type" : "leave",
@@ -76,12 +86,6 @@ var events = function(io){
             console.log(msg);
             pub.publish(msg["channel"], JSON.stringify(msg));
         });
-        // Test
-        socket.on('testblock', function(msg){
-            console.log("receive new block event for publishing");
-            console.log(msg);
-            pub.publish("newBlock", msg);
-        });
         // Designer events
         socket.on('component', function(msg){
             console.log("receive new component event for publishing");
@@ -89,8 +93,22 @@ var events = function(io){
             pub.publish(msg["channel"], JSON.stringify(msg));
         })
         sub.on('message', function(ch, msg){
-            console.log("ready to emit "+ch+" "+msg);
+            console.log(userEmail + " ready to emit "+ch+" "+msg);
             socket.emit(ch, msg);
+        });
+
+        //disconnection
+        socket.on("disconnect", function(){
+            console.log(userEmail+" connection is off");
+            var pubMsg = {
+                "type" : "leave",
+                "user" : userEmail
+            };
+            console.log(pubMsg);
+            if(projectJoinedUser.has(projectID)){
+                projectJoinedUser.get(projectID).delete(userEmail);
+            }
+            pub.publish(projectID, JSON.stringify(pubMsg));
         });
     });
 }
