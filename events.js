@@ -9,11 +9,11 @@ var debugging = function(msg){
     }
 }
 var logging = function(user, project, source, eventType, rest){
-    console.log("{timestamp: "+Date.now()
-    +", user: "+user
-    +", projectId: "+project
-    +", source: "+source
-    +", eventType: "+eventType
+    console.log("{timestamp:"+Date.now()
+    +",user:"+user
+    +",projectId:"+project
+    +",source:"+source
+    +",eventType:"+eventType
     +rest
     +"}");
 }
@@ -60,7 +60,7 @@ var events = function(io){
         socket.on('shareProject', function(msg){
             debugging(userEmail + " on shareProject "+msg);
             pub.publish(msg["channel"], JSON.stringify(msg));
-            logging(userEmail, msg["project"], "Other", "share", ", shareTo: "+msg["channel"]);
+            logging(userEmail, msg["project"], "Other", "share", ",shareTo: "+msg["channel"]);
         });
 
         // Publish changes to project channel when a user opens a project
@@ -105,12 +105,49 @@ var events = function(io){
         socket.on('block', function(msg){
             debugging(userEmail+" on block "+ msg);
             pub.publish(msg["channel"], JSON.stringify(msg));
+            var proj = msg["channel"].split("_")[0];
+            var evt = msg["event"];
+            switch (evt["type"]) {
+                case "create":
+                case "delete":
+                    logging(userEmail, proj, "Block", evt["type"],
+                    ",blockId:"+evt["blockId"]);
+                    break;
+                case "move":
+                    logging(userEmail, proj, "Block", evt["type"],
+                    ",blockId:"+ evt["blockId"]
+                    + ",parentId:"+ evt["newParentId"]);
+                    break;
+                case "change":
+                    logging(userEmail, proj, "Block", evt["type"],
+                    ",blockId:"+ evt["blockId"]
+                    + ",propertyName:"+ evt["name"]);
+                    break;
+                default:
+                    break;
+            }
         });
         // Designer events
         socket.on('component', function(msg){
             debugging(userEmail+" on component "+ msg);
             pub.publish(msg["channel"], JSON.stringify(msg));
-        })
+            var evt = msg["event"];
+            switch (evt["type"]) {
+                case "component.create":
+                case "component.delete":
+                    logging(userEmail, evt["projectId"], "Designer", evt["type"],
+                    ",componentId:"+evt["componentId"]
+                    +",parentId:"+evt["parentId"]);
+                    break;
+                case "component.property":
+                    logging(userEmail, evt["projectId"], "Designer", evt["type"],
+                    ",componentId:"+evt["componentId"]
+                    +",propertyName:"+evt["property"]);
+                    break;
+                default:
+                    break;
+            }
+        });
         sub.on('message', function(ch, msg){
             debugging(userEmail + " receive message on "+ch+" msg: "+msg);
             socket.emit(ch, msg);
@@ -127,6 +164,7 @@ var events = function(io){
                 projectJoinedUser.get(projectID).delete(userEmail);
             }
             pub.publish(projectID, JSON.stringify(pubMsg));
+            logging(userEmail, projectID, "Other", "user.leave", "");
         });
     });
 }
