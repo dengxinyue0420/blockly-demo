@@ -42,7 +42,10 @@ var events = function(io){
                 debugging(userEmail + " subscribe to project channel "+msg);
             }
         });
-        // Subscribe to a screen channel, each socket should only have one screen channel on friendly
+        // Subscribe to a screen channel, each socket should only have one screen channel on fly
+        // TODO(xinyue): Modify this to support multiple screens, user should subscribe all screen channels
+        // in the project when user joins the project, and ubsubscribe
+        // all screen channels when leave the project.
         socket.on("screenChannel", function(msg){
             if(screenChannel===msg){
                 return;
@@ -76,12 +79,14 @@ var events = function(io){
             joinedUsers.add(msg["user"]);
             joinedUsers.forEach(function(e){
                 var pubMsg = {
+                    "project": msg["project"],
                     "type" : "join",
                     "user" : e
                 };
                 socket.emit(msg["project"], JSON.stringify(pubMsg));
             });
             var pubSelf = {
+                "project": msg["project"],
                 "type" : "join",
                 "user" : userEmail
             };
@@ -92,6 +97,7 @@ var events = function(io){
         socket.on('userLeave', function(msg){
             debugging(userEmail+" on userLeave "+ msg);
             var pubMsg = {
+                "project": msg["project"],
                 "type" : "leave",
                 "user" : msg["user"]
             };
