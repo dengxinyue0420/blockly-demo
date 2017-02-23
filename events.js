@@ -1,7 +1,8 @@
 var redis = require('redis')
 var pub = redis.createClient();
 var projectJoinedUser = new Map();
-var debug = false;
+var debug = true;
+var log = false;
 
 var debugging = function(msg){
     if(debug){
@@ -9,13 +10,15 @@ var debugging = function(msg){
     }
 }
 var logging = function(user, project, source, eventType, rest){
-    console.log("{timestamp:"+Date.now()
-    +",user:"+user
-    +",projectId:"+project
-    +",source:"+source
-    +",eventType:"+eventType
-    +rest
-    +"}");
+    if(log){
+        console.log("{timestamp:"+Date.now()
+        +",user:"+user
+        +",projectId:"+project
+        +",source:"+source
+        +",eventType:"+eventType
+        +rest
+        +"}");
+    }
 }
 var events = function(io){
     io.on('connection', function(socket){
@@ -107,6 +110,17 @@ var events = function(io){
             pub.publish(msg["project"], JSON.stringify(pubMsg));
             logging(userEmail, msg["project"], "Other", "user.leave", "");
         });
+
+        socket.on('leader', function(msg){
+            debugging(userEmail+" on leader "+msg);
+            var pubMsg = {
+                "project" : msg["project"],
+                "type" : "leader",
+                "user" : msg["user"],
+                "leader" : msg["leader"]
+            };
+            pub.publish(msg["project"], JSON.stringify(pubMsg));
+        });
         // Publish changes to screen channel when blocks changed
         socket.on('block', function(msg){
             debugging(userEmail+" on block "+ msg);
@@ -154,6 +168,8 @@ var events = function(io){
                     break;
             }
         });
+
+
         sub.on('message', function(ch, msg){
             debugging(userEmail + " receive message on "+ch+" msg: "+msg);
             socket.emit(ch, msg);
