@@ -117,7 +117,8 @@ var events = function(io){
                 "project" : msg["project"],
                 "type" : "leader",
                 "user" : msg["user"],
-                "leader" : msg["leader"]
+                "leader" : msg["leader"],
+                "leaderEmail" : msg["leaderEmail"]
             };
             pub.publish(msg["project"], JSON.stringify(pubMsg));
         });
