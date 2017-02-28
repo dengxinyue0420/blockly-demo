@@ -1,8 +1,8 @@
 var redis = require('redis')
 var pub = redis.createClient();
 var projectJoinedUser = new Map();
-var debug = true;
-var log = false;
+var debug = false;
+var log = true;
 
 var debugging = function(msg){
     if(debug){
