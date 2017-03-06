@@ -9,15 +9,9 @@ var debugging = function(msg){
         console.log(msg);
     }
 }
-var logging = function(user, project, source, eventType, rest){
+var logging = function(obj){
     if(log){
-        console.log("{timestamp:"+Date.now()
-        +",user:"+user
-        +",projectId:"+project
-        +",source:"+source
-        +",eventType:"+eventType
-        +rest
-        +"}");
+        console.log(JSON.stringify(obj));
     }
 }
 var events = function(io){
@@ -66,7 +60,15 @@ var events = function(io){
         socket.on('shareProject', function(msg){
             debugging(userEmail + " on shareProject "+msg);
             pub.publish(msg["channel"], JSON.stringify(msg));
-            logging(userEmail, msg["project"], "Other", "share", ",shareTo: "+msg["channel"]);
+            var lmsg = {
+                timestamp : Date.now(),
+                user : userEmail,
+                projectId : msg["project"],
+                source : "Other",
+                eventType: "share",
+                shareTo: msg["channel"]
+            }
+            logging(lmsg);
         });
 
         // Publish changes to project channel when a user opens a project
@@ -94,7 +96,14 @@ var events = function(io){
                 "user" : userEmail
             };
             pub.publish(msg["project"], JSON.stringify(pubSelf));
-            logging(userEmail, msg["project"], "Other", "user.join", "");
+            var lmsg = {
+                timestamp : Date.now(),
+                user : userEmail,
+                projectId : msg["project"],
+                source : "Other",
+                eventType: "user.join"
+            }
+            logging(lmsg);
         });
         // Publish changes to project channel when a user closes a project
         socket.on('userLeave', function(msg){
@@ -108,7 +117,14 @@ var events = function(io){
                 projectJoinedUser.get(msg["project"]).delete(msg["user"]);
             }
             pub.publish(msg["project"], JSON.stringify(pubMsg));
-            logging(userEmail, msg["project"], "Other", "user.leave", "");
+            var lmsg = {
+                timestamp : Date.now(),
+                user : userEmail,
+                projectId : msg["project"],
+                source : "Other",
+                eventType: "user.leave"
+            }
+            logging(lmsg);
         });
 
         socket.on('leader', function(msg){
@@ -131,18 +147,39 @@ var events = function(io){
             switch (evt["type"]) {
                 case "create":
                 case "delete":
-                    logging(userEmail, proj, "Block", evt["type"],
-                    ",blockId:"+evt["blockId"]);
+                    var lmsg = {
+                        timestamp : Date.now(),
+                        user : userEmail,
+                        projectId : proj,
+                        source : "Block",
+                        eventType: evt["type"],
+                        blockId: evt["blockId"]
+                    }
+                    logging(lmsg);
                     break;
                 case "move":
-                    logging(userEmail, proj, "Block", evt["type"],
-                    ",blockId:"+ evt["blockId"]
-                    + ",parentId:"+ evt["newParentId"]);
+                    var lmsg = {
+                        timestamp : Date.now(),
+                        user : userEmail,
+                        projectId : proj,
+                        source : "Block",
+                        eventType: evt["type"],
+                        blockId: evt["blockId"],
+                        parentId: evt["newParentId"]
+                    }
+                    logging(lmsg);
                     break;
                 case "change":
-                    logging(userEmail, proj, "Block", evt["type"],
-                    ",blockId:"+ evt["blockId"]
-                    + ",propertyName:"+ evt["name"]);
+                    var lmsg = {
+                        timestamp : Date.now(),
+                        user : userEmail,
+                        projectId : proj,
+                        source : "Block",
+                        eventType: evt["type"],
+                        blockId: evt["blockId"],
+                        propertyName: evt["name"]
+                    }
+                    logging(lmsg);
                     break;
                 default:
                     break;
@@ -156,14 +193,39 @@ var events = function(io){
             switch (evt["type"]) {
                 case "component.create":
                 case "component.delete":
-                    logging(userEmail, evt["projectId"], "Designer", evt["type"],
-                    ",componentId:"+evt["componentId"]
-                    +",parentId:"+evt["parentId"]);
+                    var lmsg = {
+                        timestamp : Date.now(),
+                        user : userEmail,
+                        projectId : evt["projectId"],
+                        source : "Designer",
+                        eventType: evt["type"],
+                        componentId: evt["componentId"]
+                    }
+                    logging(lmsg);
+                    break;
+                case "component.move":
+                    var lmsg = {
+                        timestamp : Date.now(),
+                        user : userEmail,
+                        projectId : evt["projectId"],
+                        source : "Designer",
+                        eventType: evt["type"],
+                        componentId: evt["componentId"],
+                        parentId: evt["parentId"]
+                    }
+                    logging(lmsg);
                     break;
                 case "component.property":
-                    logging(userEmail, evt["projectId"], "Designer", evt["type"],
-                    ",componentId:"+evt["componentId"]
-                    +",propertyName:"+evt["property"]);
+                    var lmsg = {
+                        timestamp : Date.now(),
+                        user : userEmail,
+                        projectId : evt["projectId"],
+                        source : "Designer",
+                        eventType: evt["type"],
+                        componentId: evt["componentId"],
+                        propertyName: evt["property"]
+                    }
+                    logging(lmsg);
                     break;
                 default:
                     break;
@@ -187,7 +249,14 @@ var events = function(io){
                 projectJoinedUser.get(projectID).delete(userEmail);
             }
             pub.publish(projectID, JSON.stringify(pubMsg));
-            logging(userEmail, projectID, "Other", "user.leave", "");
+            var lmsg = {
+                timestamp : Date.now(),
+                user : userEmail,
+                projectId : projectID,
+                source : "Other",
+                eventType: "user.leave"
+            }
+            logging(lmsg);
         });
     });
 }
