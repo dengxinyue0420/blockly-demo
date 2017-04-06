@@ -232,6 +232,14 @@ var events = function(io){
             }
         });
 
+        // publish latest status
+        socket.on("status", function(msg){
+            pub.publish(msg["channel"], JSON.stringify(msg));
+        });
+        // get status from others
+        socket.on("getStatus", function(msg){
+            pub.publish(msg["channel"], JSON.stringify(msg));
+        });
 
         sub.on('message', function(ch, msg){
             debugging(userEmail + " receive message on "+ch+" msg: "+msg);
