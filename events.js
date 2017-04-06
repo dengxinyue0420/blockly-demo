@@ -241,6 +241,12 @@ var events = function(io){
             pub.publish(msg["channel"], JSON.stringify(msg));
         });
 
+        // file upload
+        socket.on("file", function(msg){
+            pub.publish(msg["channel"], JSON.stringify(msg));
+        });
+
+        // receive subscribe message
         sub.on('message', function(ch, msg){
             debugging(userEmail + " receive message on "+ch+" msg: "+msg);
             socket.emit(ch, msg);
