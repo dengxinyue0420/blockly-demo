@@ -95,15 +95,17 @@ var events = function(io){
                 "type" : "join",
                 "user" : userEmail
             };
-            pub.publish(msg["project"], JSON.stringify(pubSelf));
-            var lmsg = {
-                timestamp : Date.now(),
-                user : userEmail,
-                projectId : msg["project"],
-                source : "Other",
-                eventType: "user.join"
+            if(msg["project"]){
+                pub.publish(msg["project"], JSON.stringify(pubSelf));
+                var lmsg = {
+                    timestamp : Date.now(),
+                    user : userEmail,
+                    projectId : msg["project"],
+                    source : "Other",
+                    eventType: "user.join"
+                }
+                logging(lmsg);
             }
-            logging(lmsg);
         });
         // Publish changes to project channel when a user closes a project
         socket.on('userLeave', function(msg){
@@ -116,15 +118,17 @@ var events = function(io){
             if(projectJoinedUser.has(msg["project"])){
                 projectJoinedUser.get(msg["project"]).delete(msg["user"]);
             }
-            pub.publish(msg["project"], JSON.stringify(pubMsg));
-            var lmsg = {
-                timestamp : Date.now(),
-                user : userEmail,
-                projectId : msg["project"],
-                source : "Other",
-                eventType: "user.leave"
+            if(msg["project"]){
+                pub.publish(msg["project"], JSON.stringify(pubMsg));
+                var lmsg = {
+                    timestamp : Date.now(),
+                    user : userEmail,
+                    projectId : msg["project"],
+                    source : "Other",
+                    eventType: "user.leave"
+                }
+                logging(lmsg);
             }
-            logging(lmsg);
         });
 
         socket.on('leader', function(msg){
