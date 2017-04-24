@@ -74,6 +74,7 @@ var events = function(io){
         // Publish changes to project channel when a user opens a project
         socket.on('userJoin', function(msg){
             debugging(userEmail+" on userJoin "+ msg);
+            projectID = msg["project"];
             var joinedUsers;
             if(projectJoinedUser.has(msg["project"])){
                 joinedUsers = projectJoinedUser.get(msg["project"]);
@@ -110,6 +111,7 @@ var events = function(io){
         // Publish changes to project channel when a user closes a project
         socket.on('userLeave', function(msg){
             debugging(userEmail+" on userLeave "+ msg);
+            projectID = "";
             var pubMsg = {
                 "project": msg["project"],
                 "type" : "leave",
@@ -260,21 +262,25 @@ var events = function(io){
         socket.on("disconnect", function(){
             debugging(userEmail+" connection is off");
             var pubMsg = {
+                "project": projectID,
                 "type" : "leave",
                 "user" : userEmail
             };
             if(projectJoinedUser.has(projectID)){
                 projectJoinedUser.get(projectID).delete(userEmail);
             }
-            pub.publish(projectID, JSON.stringify(pubMsg));
-            var lmsg = {
-                timestamp : Date.now(),
-                user : userEmail,
-                projectId : projectID,
-                source : "Other",
-                eventType: "user.leave"
+            if(projectID!=""){
+                pub.publish(projectID, JSON.stringify(pubMsg));
+                var lmsg = {
+                    timestamp : Date.now(),
+                    user : userEmail,
+                    projectId : projectID,
+                    source : "Other",
+                    eventType: "user.leave"
+                }
+                logging(lmsg);
+                projectID = "";
             }
-            logging(lmsg);
         });
     });
 }
